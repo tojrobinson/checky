@@ -1,4 +1,4 @@
-check
-=====
+checky
+======
 
 Declarative JavaScript object validation.
