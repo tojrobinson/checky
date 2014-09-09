@@ -1,7 +1,7 @@
 var checky = require('../index.js');
 var assert = require('assert');
 
-var Book = checky({
+var validBook = checky({
    title: String,
    author: {
       type: String,
@@ -10,29 +10,76 @@ var Book = checky({
    ISBN: /^[a-zA-Z0-9]+$/
 });
 
-assert.equal(Book({
+var checkPerson = checky({
+   name: String,
+   age: {
+      type: Number,
+      min: 18,
+      max: 50
+   },
+   addr: {
+      type: Object,
+      fields: {
+         street: String,
+         number: Object
+      }
+   },
+   hobbies: ['Running', 'Gaming', 'Hacking']
+});
+
+assert.equal(checkPerson({
+   name: 'Dennis',
+   age: 50,
+   addr: {
+      street: 'Some St',
+      number: 42
+   },
+   hobbies: 'Hacking'
+}), true);
+
+assert.equal(checkPerson({
+   name: 'Dennis',
+   age: 3,
+   addr: {
+      street: 'Some St',
+      number: 42
+   },
+   hobbies: 'Running'
+}), false);
+
+assert.equal(checkPerson({
+   name: 'Dennis',
+   age: 25,
+   addr: {
+      street: 'Some St',
+      number: 42
+   },
+   hobbies: 'None'
+}), false);
+
+assert.equal(validBook({
    title: 'The C Programming Language',
    ISBN: 'abc123'
 }), true);
 
-assert.equal(Book({
+assert.equal(validBook({
    title: 'The C Programming Language',
    author: 'Kernighan and Ritchie',
    ISBN: 'abc123'
 }), true);
 
-assert.equal(Book({
+assert.equal(validBook({
    title: 'The C Programming Language',
    author: 'Kernighan and Ritchie',
    ISBN: 'abc-123'
 }), false);
 
-assert.equal(Book({
+assert.equal(validBook({
    author: 'Kernighan and Ritchie',
    ISBN: 'abc123'
 }), false);
 
-assert.equal(Book({
+assert.equal(validBook({
    title: 'The C Programming Language',
    author: 42,
    ISBN: 'abc123'
