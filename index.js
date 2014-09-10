@@ -8,6 +8,50 @@ module.exports = function(schema) {
    }
 }
 
+function checky(opt) {
+   opt = opt || {};
+   if (!opt.obj || opt.obj.constructor !== Object) return false;
+
+   var constraints = {};
+   var schemaFields = Object.keys(opt.schema);
+
+   constraints[Function] = basicConstraint;
+   constraints[Array] = setConstraint;
+   constraints[RegExp] = patternConstraint;
+   constraints[Object] = complexConstraint;
+
+   for (var i = 0; i < schemaFields.length; ++i) {
+      var field = schemaFields[i];
+      var type = opt.schema[field].constructor;
+      var error = null;
+
+      if (!opt.obj.hasOwnProperty(field)) {
+         if (!opt.schema[field].optional) {
+            error = {
+               msg: 'Missing field: ' + field
+            };
+         }
+      } else {
+         error = constraints[type](opt.obj, opt.schema, field);
+      }
+
+      if (error) {
+         // bubble errors
+         if (opt.rec) {
+            return error;
+         } else {
+            if (opt.debug) {
+               console.log(error.msg);
+            }
+
+            return false;
+         }
+      }
+   }
+
+   return (opt.rec) ? null : true;
+}
+
 function basicConstraint(obj, schema, field) {
    var error = null;
 
@@ -92,52 +136,4 @@ function complexConstraint(obj, schema, field) {
    }
 
    return error;
-}
-
-function checky(opt) {
-   opt = opt || {};
-   if (!opt.obj || opt.obj.constructor !== Object) return false;
-
-   var constraints = {};
-   var schemaFields = Object.keys(opt.schema);
-
-   constraints[Function] = basicConstraint;
-   constraints[Array] = setConstraint;
-   constraints[RegExp] = patternConstraint;
-   constraints[Object] = complexConstraint;
-
-   for (var i = 0; i < schemaFields.length; ++i) {
-      var field = schemaFields[i];
-      var type = opt.schema[field].constructor;
-      var error = null;
-
-      if (!opt.obj.hasOwnProperty(field)) {
-         if (!opt.schema[field].optional) {
-            error = {
-               msg: 'Missing field: ' + field
-            };
-         }
-      } else {
-         error = constraints[type](opt.obj, opt.schema, field);
-      }
-
-      if (error) {
-         // bubble errors
-         if (opt.rec) {
-            return error;
-         } else {
-            if (opt.debug) {
-               console.log(error.msg);
-            }
-
-            return false;
-         }
-      }
-   }
-
-   if (opt.rec) {
-      return null;
-   } else {
-      return true;
-   }
 }
