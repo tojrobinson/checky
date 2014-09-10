@@ -52,7 +52,7 @@ assert.equal(validPerson({
       number: 42
    },
    hobbies: 'Hacking'
-}, true), true);
+}), true);
 
 assert.equal(validPerson({
    name: 'Dennis',

@@ -15,7 +15,11 @@ var checkPerson = checky({
       min: 18,
       max: 80
    },
-   hobby: ['Running', 'Gaming', 'Hacking']
+   hobby: ['Running', 'Gaming', 'Hacking'],
+   other: {
+      type: String,
+      optional: true
+   }
 });
 
 var dennis = {
