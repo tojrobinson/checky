@@ -10,7 +10,7 @@ var validBook = checky({
    ISBN: /^[a-zA-Z0-9]+$/
 });
 
-var checkPerson = checky({
+var validPerson = checky({
    name: String,
    age: {
       type: Number,
@@ -21,13 +21,30 @@ var checkPerson = checky({
       type: Object,
       fields: {
          street: String,
-         number: Object
+         number: Number
       }
    },
    hobbies: ['Running', 'Gaming', 'Hacking']
 });
 
-assert.equal(checkPerson({
+var validLink = checky({
+   protocol: String,
+   host: String,
+   path: {
+      type: String,
+      comparator: function(path) {
+         return path.length < 20 && path.match(/^\/dev/) !== null;
+      }
+   }
+});
+
+assert.equal(validLink({
+   protocol: 'http',
+   host: 'stallman.org',
+   path: '/dev/null'
+}), true);
+
+assert.equal(validPerson({
    name: 'Dennis',
    age: 50,
    addr: {
@@ -35,9 +52,9 @@ assert.equal(checkPerson({
       number: 42
    },
    hobbies: 'Hacking'
-}), true);
+}, true), true);
 
-assert.equal(checkPerson({
+assert.equal(validPerson({
    name: 'Dennis',
    age: 3,
    addr: {
@@ -47,7 +64,7 @@ assert.equal(checkPerson({
    hobbies: 'Running'
 }), false);
 
-assert.equal(checkPerson({
+assert.equal(validPerson({
    name: 'Dennis',
    age: 25,
    addr: {
