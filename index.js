@@ -41,7 +41,7 @@ function checky(opt) {
             return error;
          } else {
             if (opt.debug) {
-               console.log(error.msg);
+               console.log('[' + field + '] ' + error.msg);
             }
 
             return false;
@@ -106,25 +106,34 @@ function complexConstraint(obj, schema, field) {
       } else if (fieldType === Number) {
          if (schema[field].min !== undefined && obj[field] < schema[field].min) {
             error = {
-            };
+               msg: 'Number less than minimum: ' + schema[field].min
+            }
          }
 
          if (schema[field].max !== undefined && obj[field] > schema[field].max) {
-            error = {};
+            error = {
+               msg: 'Number greater than maximum: ' + schema[field].max
+            };
          }
       } else if (fieldType === String) {
          var len = obj[field].length;
 
          if (schema[field].min !== undefined && len < schema[field].min) {
-            error = {};
+            error = {
+               msg: 'String length less than minimum: ' + schema[field].min
+            }
          }
 
          if (schema[field].max !== undefined && len > schema[field].max) {
-            error = {};
+            error = {
+               msg: 'String length greater than maximum: ' + schema[field].max
+            };
          }
 
          if (schema[field].pattern !== undefined && !obj[field].match(pattern)) {
-            error = {};
+            error = {
+               msg: 'Value "' + obj[field] + '" not found in: ' + schema[field]
+            };
          }
       } else if (fieldType === Object) {
          error = checky({
