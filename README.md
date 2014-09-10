@@ -28,7 +28,7 @@ var dennis = {
    hobby: 'Hacking'
 };
 
-checkPerson (dennis); // true
+checkPerson(dennis); // true
 ```
 
 Recursive Schemas
