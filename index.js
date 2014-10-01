@@ -117,6 +117,7 @@ function complexConstraint(obj, schema, field) {
          }
       } else if (fieldType === String) {
          var len = obj[field].length;
+         var pattern = schema[field].pattern;
 
          if (schema[field].min !== undefined && len < schema[field].min) {
             error = {
@@ -130,7 +131,7 @@ function complexConstraint(obj, schema, field) {
             };
          }
 
-         if (schema[field].pattern !== undefined && !obj[field].match(pattern)) {
+         if (pattern !== undefined && !obj[field].match(pattern)) {
             error = {
                msg: 'Value "' + obj[field] + '" not found in: ' + schema[field]
             };
