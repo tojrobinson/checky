@@ -22,9 +22,15 @@ function checky(opt) {
 
    for (var i = 0; i < schemaFields.length; ++i) {
       var field = schemaFields[i];
-      var type = opt.schema[field] && opt.schema[field].constructor;
       var error = null;
+      var type; 
 
+      try {
+         type = opt.schema[field].constructor;
+      } catch (e) {
+         type = opt.schema[field];
+      }
+ 
       if (!opt.obj.hasOwnProperty(field)) {
          if (!opt.schema[field].optional) {
             error = {
@@ -54,7 +60,13 @@ function checky(opt) {
 
 function basicConstraint(obj, schema, field) {
    var error = null;
-   var type = obj[field] && obj[field].constructor;
+   var type;
+
+   try {
+      type = obj[field].constructor;
+   } catch (e) {
+      type = obj[field];
+   }
 
    if (schema[field] !== type) {
       error = {
@@ -90,8 +102,14 @@ function patternConstraint(obj, schema, field) {
 }
 
 function complexConstraint(obj, schema, field) {
-   var type = obj[field] && obj[field].constructor;
    var error = null;
+   var type;
+
+   try {
+      type = obj[field].constructor;
+   } catch (e) {
+      type = obj[field];
+   }
 
    if (schema[field].type !== type) {
       error = {
