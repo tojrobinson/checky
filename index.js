@@ -22,7 +22,7 @@ function checky(opt) {
 
    for (var i = 0; i < schemaFields.length; ++i) {
       var field = schemaFields[i];
-      var type = opt.schema[field].constructor;
+      var type = opt.schema[field] && opt.schema[field].constructor;
       var error = null;
 
       if (!opt.obj.hasOwnProperty(field)) {
@@ -54,8 +54,9 @@ function checky(opt) {
 
 function basicConstraint(obj, schema, field) {
    var error = null;
+   var type = obj[field] && obj[field].constructor;
 
-   if (schema[field] !== obj[field].constructor) {
+   if (schema[field] !== type) {
       error = {
          msg: 'Invalid type: ' + obj[field].constructor + '. Expecting: ' + Function
       };
@@ -89,12 +90,12 @@ function patternConstraint(obj, schema, field) {
 }
 
 function complexConstraint(obj, schema, field) {
-   var fieldType = obj[field].constructor;
+   var type = obj[field] && obj[field].constructor;
    var error = null;
 
-   if (schema[field].type !== fieldType) {
+   if (schema[field].type !== type) {
       error = {
-         msg: 'Invalid type: ' + fieldType + '. Expecting: ' + schema[field].type
+         msg: 'Invalid type: ' + type + '. Expecting: ' + schema[field].type
       };
    } else {
       if (schema[field].comparator && schema[field].comparator.constructor === Function) {
@@ -103,7 +104,7 @@ function complexConstraint(obj, schema, field) {
                msg: 'Comparator returned false for: ' + field
             };
          }
-      } else if (fieldType === Number) {
+      } else if (type === Number) {
          if (schema[field].min !== undefined && obj[field] < schema[field].min) {
             error = {
                msg: 'Number less than minimum: ' + schema[field].min
@@ -115,7 +116,7 @@ function complexConstraint(obj, schema, field) {
                msg: 'Number greater than maximum: ' + schema[field].max
             };
          }
-      } else if (fieldType === String) {
+      } else if (type === String) {
          var len = obj[field].length;
          var pattern = schema[field].pattern;
 
@@ -136,7 +137,7 @@ function complexConstraint(obj, schema, field) {
                msg: 'Value "' + obj[field] + '" not found in: ' + schema[field]
             };
          }
-      } else if (fieldType === Object) {
+      } else if (type === Object) {
          error = checky({
             obj: obj[field],
             schema: schema[field].fields,
