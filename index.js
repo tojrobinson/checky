@@ -1,9 +1,11 @@
 module.exports = function(schema) {
-   return function(obj, debug) {
+   return function(obj, opt) {
+      opt = opt || {};
       return checky({
          obj: obj,
          schema: schema || {},
-         debug: debug || false
+         debug: opt.debug,
+         sparse: opt.sparse
       });
    }
 }
@@ -32,7 +34,7 @@ function checky(opt) {
       }
  
       if (!opt.obj.hasOwnProperty(field)) {
-         if (!opt.schema[field].optional) {
+         if (!opt.schema[field].optional && !opt.sparse) {
             error = {
                msg: 'Missing field: ' + field
             };

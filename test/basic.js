@@ -44,6 +44,21 @@ assert.equal(validLink({
    path: '/dev/null'
 }), true);
 
+assert.equal(validLink({
+   protocol: 'https',
+   path: '/dev/null'
+}), false);
+
+assert.equal(validLink({
+   protocol: 'https',
+   path: '/dev/null'
+}, {sparse: true}), true);
+
+assert.equal(validLink({
+   protocol: 4000,
+   path: '/dev/null'
+}, {sparse: true}), false);
+
 assert.equal(validPerson({
    name: 'Dennis',
    age: 50,

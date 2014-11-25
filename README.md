@@ -69,6 +69,8 @@ var russianStallmans = {
 checkNested(russianStallmans); // true
 ```
 
-Debugging
----------
-Passing in `true` as the second argument to the schema checking function (returned by **checky**) will cause error reports for invalid objects to be printed.
+Options
+-------
+The second argument to the schema checking function returned by **checky** is an options object. Options include:
+* debug  (true|false) - print error messages for invalid objects
+* sparse (true|false) - all schema fields are made optional
