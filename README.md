@@ -74,3 +74,4 @@ Options
 The second argument to the schema checking function returned by **checky** is an options object. Options include:
 * debug  (true|false) - print error messages for invalid objects
 * sparse (true|false) - all schema fields are made optional
+* err    (true|false) - instead of returning false, return an err object containing details of the schema violation
