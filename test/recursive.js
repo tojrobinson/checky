@@ -64,4 +64,17 @@ var invalid = {
 assert.equal(nestedSchema(valid), true);
 assert.equal(nestedSchema(invalid), false);
 
+valid.nested.nested.unexpected = 42;
+assert.equal(nestedSchema(valid), false);
+assert.equal(nestedSchema(valid, {err: true}).field, 'unexpected');
+assert.equal(nestedSchema(valid, {sparse: true}), true);
+
+delete valid.nested.nested.unexpected;
+assert.equal(nestedSchema(valid), true);
+
+delete valid.string;
+assert.equal(nestedSchema(valid), false);
+assert.equal(nestedSchema(valid, {err: true}).field, 'string');
+assert.equal(nestedSchema(valid, {sparse: true}), true);
+
 console.log('All tests passed. You are awesome!');

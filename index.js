@@ -1,22 +1,34 @@
+'use strict';
+
 module.exports = function(schema) {
    return function(obj, opt) {
+      schema = schema || {};
       opt = opt || {};
-      return checky({
-         obj: obj,
-         schema: schema || {},
-         debug: opt.debug,
-         sparse: opt.sparse,
-         err: opt.err
-      });
+      opt.depth = 1;
+      return checky(obj, schema, opt);
    }
 }
 
-function checky(opt) {
+function violation(error, opt) {
+   // bubble errors
+   if (--opt.depth || opt.err) {
+      return error;
+   } else {
+      if (opt.debug) {
+         console.log('[' + error.field + '] ' + error.msg);
+      }
+
+      return false;
+   }
+}
+
+function checky(obj, schema, opt) {
    opt = opt || {};
-   if (!opt.obj || opt.obj.constructor !== Object) return false;
+   if (!obj || obj.constructor !== Object) {
+      return false;
+   }
 
    var constraints = {};
-   var schemaFields = Object.keys(opt.schema);
 
    constraints[Function] = basicConstraint;
    constraints[undefined] = basicConstraint;
@@ -25,53 +37,57 @@ function checky(opt) {
    constraints[RegExp] = patternConstraint;
    constraints[Object] = complexConstraint;
 
-   for (var i = 0; i < schemaFields.length; ++i) {
-      var field = schemaFields[i];
+   // assert obj fields exist in schema
+   for (var f in obj) {
+      if (!opt.sparse && !schema.hasOwnProperty(f)) {
+         error = {
+            violation: 'unexpected',
+            field: f,
+            msg: 'Found unexpected field: ' + f
+         };
+         return violation(error, opt);
+      }
+   }
+
+   for (var f in schema) {
       var error = null;
       var type; 
 
       try {
-         type = opt.schema[field].constructor;
+         type = schema[f].constructor;
       } catch (e) {
-         type = opt.schema[field];
+         type = schema[f];
       }
  
-      if (!opt.obj.hasOwnProperty(field)) {
-         if (!opt.schema[field].optional && !opt.sparse) {
+      if (!obj.hasOwnProperty(f)) {
+         if (!opt.sparse && !schema[f].optional) {
             error = {
                violation: 'missing',
-               msg: 'Missing field: ' + field
+               field: f,
+               msg: 'Missing field: ' + f
             };
          }
       } else {
-         error = constraints[type](opt.obj, opt.schema, field);
+         error = constraints[type]({
+            obj: obj,
+            schema: schema,
+            opt: opt
+         }, f);
       }
 
       if (error) {
-         // bubble errors
-         if (opt.rec) {
-            return error;
-         } else {
-            if (opt.debug) {
-               console.log('[' + field + '] ' + error.msg);
-            }
-
-            if (opt.err) {
-               error.field = field;
-               return error;
-            }
-
-            return false;
-         }
+         return violation(error, opt);
       }
    }
 
-   return (opt.rec) ? null : true;
+   return (--opt.depth) ? null : true;
 }
 
-function basicConstraint(obj, schema, field) {
+function basicConstraint(comp, field) {
    var error = null;
    var type;
+   var obj = comp.obj;
+   var schema = comp.schema;
 
    try {
       type = obj[field].constructor;
@@ -82,6 +98,7 @@ function basicConstraint(obj, schema, field) {
    if (schema[field] !== type) {
       error = {
          violation: 'type',
+         field: field,
          msg: 'Invalid type: ' + type + '. Expecting: ' + schema[field]
       };
    }
@@ -89,12 +106,15 @@ function basicConstraint(obj, schema, field) {
    return error;
 }
 
-function setConstraint(obj, schema, field) {
+function setConstraint(comp, field) {
    var error = null;
+   var obj = comp.obj;
+   var schema = comp.schema;
 
    if (schema[field].indexOf(obj[field]) <= -1) {
       error = {
          violation: 'set',
+         field: field,
          msg: 'Value "' + obj[field] + '" not matched by: ' + schema[field]
       };
    }
@@ -102,12 +122,15 @@ function setConstraint(obj, schema, field) {
    return error;
 }
 
-function patternConstraint(obj, schema, field) {
+function patternConstraint(comp, field) {
    var error = null;
+   var obj = comp.obj;
+   var schema = comp.schema;
 
    if (!obj[field].match(schema[field])) {
       error = {
          violation: 'pattern',
+         field: field,
          msg: 'Value "' + obj[field] + '" not found in: ' + schema[field]
       };
    }
@@ -115,9 +138,12 @@ function patternConstraint(obj, schema, field) {
    return error;
 }
 
-function complexConstraint(obj, schema, field) {
+function complexConstraint(comp, field) {
    var error = null;
    var type;
+   var obj = comp.obj;
+   var schema = comp.schema;
+   var opt = comp.opt;
 
    try {
       type = obj[field].constructor;
@@ -128,6 +154,7 @@ function complexConstraint(obj, schema, field) {
    if (schema[field].type !== type) {
       error = {
          violation: 'type',
+         field: field,
          msg: 'Invalid type: ' + type + '. Expecting: ' + schema[field].type
       };
    } else {
@@ -135,6 +162,7 @@ function complexConstraint(obj, schema, field) {
          if (!schema[field].comparator(obj[field])) {
             error = {
                violation: 'comparator',
+               field: field,
                msg: 'Comparator returned false for: ' + field
             };
          }
@@ -142,6 +170,7 @@ function complexConstraint(obj, schema, field) {
          if (schema[field].min !== undefined && obj[field] < schema[field].min) {
             error = {
                violation: 'min',
+               field: field,
                msg: 'Number less than minimum: ' + schema[field].min
             }
          }
@@ -149,6 +178,7 @@ function complexConstraint(obj, schema, field) {
          if (schema[field].max !== undefined && obj[field] > schema[field].max) {
             error = {
                violation: 'max',
+               field: field,
                msg: 'Number greater than maximum: ' + schema[field].max
             };
          }
@@ -158,8 +188,8 @@ function complexConstraint(obj, schema, field) {
 
          if (schema[field].min !== undefined && len < schema[field].min) {
             error = {
-               field: schema[field],
                violation: 'min',
+               field: field,
                msg: 'String length less than minimum: ' + schema[field].min
             }
          }
@@ -167,6 +197,7 @@ function complexConstraint(obj, schema, field) {
          if (schema[field].max !== undefined && len > schema[field].max) {
             error = {
                violation: 'max',
+               field: field,
                msg: 'String length greater than maximum: ' + schema[field].max
             };
          }
@@ -174,15 +205,13 @@ function complexConstraint(obj, schema, field) {
          if (pattern !== undefined && !obj[field].match(pattern)) {
             error = {
                violation: 'pattern',
+               field: field,
                msg: 'Value "' + obj[field] + '" not found in: ' + schema[field]
             };
          }
       } else if (type === Object) {
-         error = checky({
-            obj: obj[field],
-            schema: schema[field].fields,
-            rec: true
-         });
+         ++opt.depth;
+         error = checky(obj[field], schema[field].fields, opt);
       }
    }
 

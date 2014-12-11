@@ -46,8 +46,34 @@ assert.equal(validLink({
 
 assert.equal(validLink({
    protocol: 'https',
+   host: 'stallman.org',
+   path: '/dev/null',
+   unexpected: 0
+}), false);
+
+assert.equal(validLink({
+   protocol: 'https',
+   host: 'stallman.org',
+   path: '/dev/null',
+   unexpected: 0
+}, {err: true}).field, 'unexpected');
+
+assert.equal(validLink({
+   protocol: 'https',
+   host: 'stallman.org',
+   path: '/dev/null',
+   unexpected: 0
+}, {sparse: true}), true);
+
+assert.equal(validLink({
+   protocol: 'https',
    path: '/dev/null'
 }), false);
+
+assert.equal(validLink({
+   protocol: 'https',
+   path: '/dev/null'
+}, {err: true}).field, 'host');
 
 assert.equal(validLink({
    protocol: 'https',
@@ -67,7 +93,7 @@ assert.equal(validPerson({
       number: 42
    },
    hobbies: 'Hacking'
-}), true);
+}, {debug: true}), true);
 
 assert.equal(validPerson({
    name: 'Dennis',
@@ -116,5 +142,11 @@ assert.equal(validBook({
    author: 42,
    ISBN: 'abc123'
 }), false);
+
+assert.equal(validBook({
+   title: 'The C Programming Language',
+   author: 42,
+   ISBN: 'abc123'
+}, {err: true}).field, 'author');
 
 console.log('All tests passed. You are awesome!');
